@@ -4,21 +4,27 @@ const { connectDb } = require("./config/database");
 const User = require("./models/user");
 const { ReturnDocument } = require("mongodb");
 const { validateSignupData } = require("./utils/validation")
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+const jwt = require("jsonwebtoken");
+const { userAuth } = require("./middlewares/auth");
 app.use(express.json());
+app.use(cookieParser());
 
-//signup user
+//signup user API
 app.post("/signup", async (req, res) => {
     try {
         const { firstName, lastName, emailId, password } = req.body
         //validating the user's data below
         validateSignupData(req)
-        //the below line means you are creating a new instance (document) of the User model using the data provided in req.body.
+
 
         //encrypting the password
 
         const hash_Password = await bcrypt.hash((req?.body?.password), 10)
         req.body.password = hash_Password;
+
+        //the below line means you are creating a new instance (document) of the User model using the data provided in req.body.
         const user = new User(req.body);
 
         // const user = new User({
@@ -33,7 +39,7 @@ app.post("/signup", async (req, res) => {
     }
 })
 
-//login user
+//login user API
 app.post("/login", async (req, res) => {
 
     try {
@@ -43,10 +49,20 @@ app.post("/login", async (req, res) => {
         if (!user) {
             return res.status(400).send("Invalid credentials")
         }
-        const passwordMatch = await bcrypt.compare(password, user.password);
-        if (!passwordMatch) {
+        const isPasswordValid = await user.validatePassword(password)
+        if (!isPasswordValid) {
             return res.status(400).send("Invalid credentials")
         }
+        //Here, we create the jwt token
+
+        const token = await user.getJWT() //here, we can see getJWT is being called inside user object and the token which is the returned value of this getJWT function is stored in token variable.
+        //console.log(token);
+
+        //we put this jwt inside cookie and send back to user along with the response
+
+        res.cookie("token", token, { expires: new Date(Date.now() + 8 * 3600000) })
+
+
         res.send("login successfull for- !" + user.firstName)
     } catch (err) {
         return res.status(500).send("Error: " + err.message);
@@ -55,6 +71,45 @@ app.post("/login", async (req, res) => {
 
 
 })
+
+//get profile API
+app.get("/profile", userAuth, (req, res) => {
+    try {
+        const user = req.user;
+        res.send(user);
+
+    } catch (err) {
+        res.status(500).send("Error: " + err.message);
+
+    }
+
+})
+
+//sending connection request API
+
+app.post("/sendConnectionRequest", userAuth, (req, res) => {
+    const user = req.user
+    console.log(`${user.firstName} sent the connection request`);
+    res.send(`${user.firstName} sent the connection request`)
+}
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 //Get user by email
 app.get("/user", async (req, res) => {
