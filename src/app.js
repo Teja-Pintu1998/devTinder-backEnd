@@ -3,19 +3,57 @@ const app = express();
 const { connectDb } = require("./config/database");
 const User = require("./models/user");
 const { ReturnDocument } = require("mongodb");
-
+const { validateSignupData } = require("./utils/validation")
+const bcrypt = require("bcrypt")
 app.use(express.json());
 
+//signup user
 app.post("/signup", async (req, res) => {
-    //the above line means you are creating a new instance (document) of the User model using the data provided in req.body.
-    const user = new User(req.body);
     try {
+        const { firstName, lastName, emailId, password } = req.body
+        //validating the user's data below
+        validateSignupData(req)
+        //the below line means you are creating a new instance (document) of the User model using the data provided in req.body.
+
+        //encrypting the password
+
+        const hash_Password = await bcrypt.hash((req?.body?.password), 10)
+        req.body.password = hash_Password;
+        const user = new User(req.body);
+
+        // const user = new User({
+        //     firstName, lastName, emailId, password: hash_Password
+        // });
+
         await user.save()
         res.send("User added successfully!")
 
     } catch (err) {
-        res.status(400).send("Error saving user: " + err.message)
+        res.status(400).send("Error: " + err.message)
     }
+})
+
+//login user
+app.post("/login", async (req, res) => {
+
+    try {
+        const { emailId, password } = req.body;
+        //finding for user exixtence
+        const user = await User.findOne({ emailId })
+        if (!user) {
+            return res.status(400).send("Invalid credentials")
+        }
+        const passwordMatch = await bcrypt.compare(password, user.password);
+        if (!passwordMatch) {
+            return res.status(400).send("Invalid credentials")
+        }
+        res.send("login successfull for- !" + user.firstName)
+    } catch (err) {
+        return res.status(500).send("Error: " + err.message);
+
+    }
+
+
 })
 
 //Get user by email
