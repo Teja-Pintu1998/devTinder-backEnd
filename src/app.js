@@ -1,7 +1,7 @@
 const express = require("express");
 const app = express();
 const { connectDb } = require("./config/database");
-
+const User = require("./models/user")
 
 
 const cookieParser = require("cookie-parser");
@@ -11,6 +11,7 @@ app.use(cookieParser());
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/request");
+const { userAuth } = require("./middlewares/auth");
 
 app.use("/", authRouter);
 app.use("/", profileRouter);
@@ -65,7 +66,7 @@ app.get("/user", async (req, res) => {
 })
 
 //Feed API -- get all the users
-app.get("/feed", async (req, res) => {
+app.get("/feed",userAuth, async (req, res) => {
     try {
         const users = await User.find({});
         res.send(users)
@@ -76,7 +77,7 @@ app.get("/feed", async (req, res) => {
 });
 
 //delete the user
-app.delete("/deleteUser", async (req, res) => {
+app.delete("/deleteUser", userAuth, async (req, res) => {
     const userId = req.body.userId;
 
     try {
@@ -97,7 +98,7 @@ app.delete("/deleteUser", async (req, res) => {
 })
 
 //update the user
-app.patch("/user/:userId", async (req, res) => {
+app.patch("/user/:userId", userAuth,  async (req, res) => {
     const userId = req?.params?.userId;
     const data = req.body;
 

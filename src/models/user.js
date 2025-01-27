@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const userSchema = mongoose.Schema({
+const userSchema = new mongoose.Schema({
     firstName: {
         type: String,
         required: true
@@ -10,6 +10,8 @@ const userSchema = mongoose.Schema({
         type: String
     }, emailId: {
         type: String,
+        lowercase: true,
+        trim: true,
         required: true,
         unique: true,
         validate(value) {
@@ -19,13 +21,34 @@ const userSchema = mongoose.Schema({
         }
     }, password: {
         type: String,
-        required: true
+        required: true,
+        validate(value) {
+            if (!validator.isStrongPassword(value)) {
+                throw new Error("Enter a strong password:" + value)
+            }
+        }
     }, age: {
-        type: Number
+        type: Number,
+        min: 18
     }, gender: {
-        type: String
+        type: String,
+        enum: {
+            values: ["male", "female", "others"],
+            message: `{VALUE} is invalid gender type`
+        },
+        // validate(value){
+        //     if(!["male","female","others"].includes(value)){
+        //         throw new Error('${value} is invalid gender type')
+        //     }
+        // }
     }, photoUrl: {
-        type: String
+        type: String,
+        default: "https://geographyandyou.com/images/user-profile.png",
+        validate(value) {
+            if (!validator.isURL(value)) {
+                throw new Error("Invalid photo URL" + value)
+            }
+        }
     }, about: {
         type: String,
         //In JavaScript, this depends on how and where the function is invoked, not necessarily where it's defined. And in the case of Mongoose, it’s a special case because:Mongoose explicitly invokes the default function at the document level.It assigns the this context to the document being created, overriding the typical behavior.

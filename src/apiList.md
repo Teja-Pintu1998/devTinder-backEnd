@@ -1,13 +1,13 @@
 #DevTinder 
 
 ## authRouter
-POST /signup
-POST /login
-POST /logout
+POST /signup ✅
+POST /login ✅
+POST /logout ✅
 
 ## profileRouter
-GET /profile/view....//to get my profile details
-PATCH /profile/edit
+GET /profile/view....//to get my profile details ✅
+PATCH /profile/edit ✅
 PATCH /profile/password .....updating the password
 
 whenever we see any profile we can ignore it (left swipe) and tinder calls it pass and we can also right swipe (interested) and tinder calls it like
@@ -22,6 +22,9 @@ sending-side APIs-
 
 POST /request/send/interested/:userId
 POST /request/send/ignored/:userId
+
+POST /request/send/:status/:userId
+
 receiving-side APIs
 POST /request/review/accepted/:requestId
 POST /request/review/rejected/:requestId
