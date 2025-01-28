@@ -27,7 +27,7 @@ requestRouter.post("/request/send/:status/:toUserId", userAuth, async (req, res)
         //     });
         // }
 
-        // written the below logic as pre save method on connectionRequest.js file
+        // We can also write the below logic as pre save method on connectionRequest.js file
         // if (fromUserId.toString() === toUserId) {
         //     return res.status(400).json({
         //         message: "You cannot send a connection request to yourself",

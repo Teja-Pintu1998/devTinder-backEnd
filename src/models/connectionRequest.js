@@ -38,13 +38,12 @@ pre("save") Hook: Validation occurs within the model lifecycle and applies unive
 
 
 
-connectionRequestSchema.pre("save", function () {
+connectionRequestSchema.pre("save", function (next) {
     const connectionRequest = this;
     if (connectionRequest.fromUserId.equals(connectionRequest.toUserId)) {
-        return res.status(400).json({
-            message: "You cannot send a connection request to yourself",
-        });
+        throw new Error("Cannot send connection request to yourself")
     }
+    next()
 
 })
 
