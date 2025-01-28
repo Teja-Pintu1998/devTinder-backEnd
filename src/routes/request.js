@@ -3,7 +3,7 @@ const mongoose = require("mongoose")
 const requestRouter = express.Router();
 const { userAuth } = require("../middlewares/auth");
 const User = require("../models/user");
-const connectionRequest = require("../models/connectionRequest")
+const ConnectionRequest = require("../models/connectionRequest")
 
 //sending connection request API
 
@@ -42,7 +42,7 @@ requestRouter.post("/request/send/:status/:toUserId", userAuth, async (req, res)
         }
 
 
-        const existingConnectionRequest = await connectionRequest.findOne({
+        const existingConnectionRequest = await ConnectionRequest.findOne({
             $or: [
                 { fromUserId, toUserId },
                 {
@@ -56,7 +56,7 @@ requestRouter.post("/request/send/:status/:toUserId", userAuth, async (req, res)
         }
 
         //creating a new document below
-        const newConnectionRequest = new connectionRequest({
+        const newConnectionRequest = new ConnectionRequest({
             fromUserId,
             toUserId,
             status
@@ -79,5 +79,58 @@ requestRouter.post("/request/send/:status/:toUserId", userAuth, async (req, res)
 }
 
 )
+
+requestRouter.post("/request/review/:status/:requestId", userAuth, async (req, res) => {
+
+    try {
+
+        // points to consider
+        // Akshay => Elon
+        // loggedInId === toUserIdstatus = interested bcoz we cant accept or reject any profile if it was ignored for the very first time.
+
+        const loggedInUser = req.user;
+        const { status, requestId } = req.params;
+
+
+        const allowedStatus = ["accepted", "rejected"];
+        if (!allowedStatus.includes(status)) {
+            //console.log("hello")
+            return res.status(400).json({
+                message: "Invalid status"
+            });
+        }
+
+        //checking if the requestId is present inthe database or not
+
+        //console.log({ requestId, toUserId: loggedInUser._id, status: "interested" });
+        const connectionRequest = await ConnectionRequest.findOne({
+            _id: requestId,
+            toUserId: loggedInUser._id,
+            status: { $in: ["interested", "accepted", "rejected"] },
+            //allow transitions from "accepted" to "rejected" or other statuses.
+        });
+        //console.log({ connectionRequest });
+
+
+        if (!connectionRequest) {
+            return res.status(400).json({
+                message: "Connection request not found"
+            });
+
+        }
+
+        connectionRequest.status = status;
+        const data = await connectionRequest.save();
+        res.json({
+            message: "Connection request " + status,
+            data
+        })
+
+    } catch (err) {
+        res.status(400).send("Error: " + err.message)
+    }
+
+
+})
 
 module.exports = requestRouter;

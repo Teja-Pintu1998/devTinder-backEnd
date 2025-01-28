@@ -23,11 +23,13 @@ sending-side APIs-
 POST /request/send/interested/:userId
 POST /request/send/ignored/:userId
 
-POST /request/send/:status/:userId
+POST /request/send/:status/:toUserId ✅
 
 receiving-side APIs
 POST /request/review/accepted/:requestId
 POST /request/review/rejected/:requestId
+
+POST /request/review/:status/:requestId ✅
 
 APIs for all the matches:
 

@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 const connectionRequestSchema = new mongoose.Schema({
     fromUserId: {
         type: mongoose.Schema.Types.ObjectId,
+        //reference to the User collection
+        ref:"User",
         required: true
     },
     toUserId: {
@@ -12,7 +14,7 @@ const connectionRequestSchema = new mongoose.Schema({
     status: {
         type: String,
         enum: {
-            values: ["interested", "ignored"],
+            values: ["interested", "ignored","accepted","rejected"],
             message: `{VALUE} is incorrect status type`
         },
         required: true
@@ -47,6 +49,6 @@ connectionRequestSchema.pre("save", function (next) {
 
 })
 
-const ConnectionRequest = mongoose.model("connectionRequest", connectionRequestSchema); //its like creating a factory that helps in creating new documents
+const connectionRequest = mongoose.model("ConnectionRequest", connectionRequestSchema); //its like creating a factory that helps in creating new documents
 
-module.exports = ConnectionRequest;
+module.exports = connectionRequest;
